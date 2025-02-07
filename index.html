@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق السجل الشخصي</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="welcome-container" id="welcomeContainer">
+        <h1 class="highlight-box">أهلاً بك في سجل أيتام جمعية شخن ول فال في العيون</h1>
+        <button id="startBtn"><h1>بدء التسجيل</h1></button>
+        <button id="browseBtn"><h1>تصفح المسجلين</h1></button>
+    </div>
+
+    <div class="container hidden" id="formContainer">
+        <h2>تطبيق السجل الشخصي</h2>
+        <input type="text" id="serialNumber" placeholder="رقم كود المكفول"required>
+        <input type="text" id="fullName" placeholder="الاسم الكامل" required>
+        <input type="text" id="guardianName" placeholder="اسم الوصي" required>
+        <input type="date" id="birthDate" placeholder="تاريخ الميلاد" required>
+        <input type="date" id="fatherDeathDate" placeholder="تاريخ وفاة الأب">
+        <input type="text" id="phoneNumber" placeholder="رقم الهاتف" required>
+        <input type="text" id="altPhoneNumber" placeholder="الهاتف البديل">
+        <input type="text" id="whatsappNumber" placeholder="رقم واتساب">
+        <input type="text" id="address" placeholder="عنوان السكن" required>
+        <button id="saveBtn">حفظ السجل</button>
+        <button id="backToWelcomeBtn">العودة إلى الصفحة الرئيسية</button>
+    </div>
+
+    <div class="container hidden" id="browseContainer">
+        <h2>تصفح المسجلين</h2>
+        <input type="text" id="browseSerialNumber" placeholder="ادخل رقم كود المكفول" required>
+        <button id="fetchRecordBtn">عرض السجل</button>
+        <div id="recordDisplay" class="hidden"></div>
+        <button id="backToWelcomeFromBrowseBtn">العودة إلى الصفحة الرئيسية</button>
+    </div>
+
+    <div class="container hidden" id="successContainer">
+        <h2>تم التسجيل بنجاح!</h2>
+        <button id="editBtn">إجراء تغييرات</button>
+        <button id="resetBtn">تسجيل شخص جديد</button>
+    </div>
+
+    <div class="copy-right">
+        <div class="copy-content">
+            <p>
+                Developed by
+            </p>
+            <i class="bx bx-copyright copy-i"></i> 
+            <p class="miss">EBY</p>
+        </div>
+    </div>
+    
+
+    <script>
+        // تحميل البيانات المخزنة مسبقًا من Local Storage
+        const records = JSON.parse(localStorage.getItem('records')) || {};
+
+        // إضافة الأحداث إلى الأزرار
+        document.getElementById('startBtn').addEventListener('click', showFormContainer);
+        document.getElementById('browseBtn').addEventListener('click', showBrowseContainer);
+        document.getElementById('fetchRecordBtn').addEventListener('click', fetchRecord);
+        document.getElementById('saveBtn').addEventListener('click', saveRecord);
+        document.getElementById('editBtn').addEventListener('click', showFormContainer);
+        document.getElementById('resetBtn').addEventListener('click', resetForm);
+        document.getElementById('backToWelcomeBtn').addEventListener('click', showWelcomeContainer);
+        document.getElementById('backToWelcomeFromBrowseBtn').addEventListener('click', showWelcomeContainer);
+
+        function showWelcomeContainer() {
+            clearFields();
+            hideAllContainers();
+            document.getElementById('welcomeContainer').classList.remove('hidden');
+        }
+
+        function showFormContainer() {
+            hideAllContainers();
+            document.getElementById('formContainer').classList.remove('hidden');
+        }
+
+        function showBrowseContainer() {
+            hideAllContainers();
+            document.getElementById('browseContainer').classList.remove('hidden');
+        }
+
+        function hideAllContainers() {
+            document.getElementById('formContainer').classList.add('hidden');
+            document.getElementById('successContainer').classList.add('hidden');
+            document.getElementById('browseContainer').classList.add('hidden');
+            document.getElementById('welcomeContainer').classList.add('hidden');
+        }
+
+        function saveRecord() {
+            const serialNumber = document.getElementById('serialNumber').value;
+            if (!serialNumber) {
+                alert('الرجاء إدخال الرقم التسلسلي');
+                return;
+            }
+
+            records[serialNumber] = {
+                fullName: document.getElementById('fullName').value,
+                guardianName: document.getElementById('guardianName').value,
+                birthDate: document.getElementById('birthDate').value,
+                fatherDeathDate: document.getElementById('fatherDeathDate').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                altPhoneNumber: document.getElementById('altPhoneNumber').value,
+                whatsappNumber: document.getElementById('whatsappNumber').value,
+                address: document.getElementById('address').value
+            };
+
+            // حفظ البيانات في Local Storage
+            localStorage.setItem('records', JSON.stringify(records));
+
+            showSuccessMessage();
+        }
+
+        function fetchRecord() {
+            const serialNumber = document.getElementById('browseSerialNumber').value;
+            if (!records[serialNumber]) {
+                alert('لا يوجد سجل بهذا الرقم التسلسلي');
+                return;
+            }
+
+            const record = records[serialNumber];
+            document.getElementById('recordDisplay').innerHTML = `
+                <h3>بيانات السجل</h3>
+                <p><strong>الاسم الكامل:</strong> ${record.fullName}</p>
+                <p><strong>اسم الوصي:</strong> ${record.guardianName}</p>
+                <p><strong>تاريخ الميلاد:</strong> ${record.birthDate}</p>
+                <p><strong>تاريخ وفاة الأب:</strong> ${record.fatherDeathDate || 'غير متوفر'}</p>
+                <p><strong>رقم الهاتف:</strong> ${record.phoneNumber}</p>
+                <p><strong>الهاتف البديل:</strong> ${record.altPhoneNumber || 'غير متوفر'}</p>
+                <p><strong>رقم واتساب:</strong> ${record.whatsappNumber || 'غير متوفر'}</p>
+                <p><strong>عنوان السكن:</strong> ${record.address}</p>
+            `;
+            document.getElementById('recordDisplay').classList.remove('hidden');
+        }
+
+        function showSuccessMessage() {
+            hideAllContainers();
+            document.getElementById('successContainer').classList.remove('hidden');
+        }
+
+        function resetForm() {
+            clearFields();
+            showFormContainer();
+        }
+
+        function clearFields() {
+            document.getElementById('serialNumber').value = '';
+            document.getElementById('fullName').value = '';
+            document.getElementById('guardianName').value = '';
+            document.getElementById('birthDate').value = '';
+            document.getElementById('fatherDeathDate').value = '';
+            document.getElementById('phoneNumber').value = '';
+            document.getElementById('altPhoneNumber').value = '';
+            document.getElementById('whatsappNumber').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('browseSerialNumber').value = '';
+            document.getElementById('recordDisplay').innerHTML = '';
+            document.getElementById('recordDisplay').classList.add('hidden');
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .welcome-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to right, #007bff, #00c6ff);
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+        .highlight-box {
+            background-color: #ffa500;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.7);
+            text-align: center;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        .copy-right{
+            margin-left: 45%;
+            overflow: hidden;
+        
+        }
+        
+        .copy-content{
+            display: inline-block;
+        }
+        .copy-content p{
+            display: inline-block;
+            text-transform: capitalize;
+        }
+        
+        .copy-content p.miss{
+            color: #218838;
+        }
+    </style>
+</body>
+</html>
